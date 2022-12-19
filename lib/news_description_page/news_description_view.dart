@@ -9,21 +9,38 @@ import 'package:pdf/widgets.dart' as pw;
 
 class NewsDescriptionView extends GetView<NewsDescriptionController> {
   downloadPdf() async{
-    Directory tempDir = await getTemporaryDirectory();
-    String tempPath = tempDir.path;
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
+    Directory? appDocDir = await getExternalStorageDirectory();
+    String? appDocPath = appDocDir?.path;
+    List<String>? splittedPath = appDocPath?.split('/');
+    int i = 0;
+    for(i=0;i<splittedPath!.length;i++){
+      if(splittedPath[i]=='0'){
+        break;
+      }
+    }
+    splittedPath=splittedPath.sublist(0,i+1);
+    splittedPath.add('Download');
+    String combinedPath = splittedPath.join('/');
+    print(combinedPath+' is combined path');
     final pdf = pw.Document();
     pdf.addPage(pw.Page(
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return pw.Center(
-            child: pw.Text(controller.getData()),
+            child: pw.Expanded(child: pw.Column(children: [
+              pw.Text(('Tittle: ${controller.singleEvent.value!.title}')),
+              pw.Text(controller.singleEvent.value!.author),
+              pw.Text(controller.singleEvent.value!.description),
+
+            ]))
           );
         }));
 
-    final file = File("${appDocPath}example.pdf");
+    final file = File("${combinedPath}/${controller.singleEvent.value!.title}example.pdf");
     await file.writeAsBytes(await pdf.save());
+    if (await file.exists()) {
+      print('Saved file size: (${file.path}) : ${file.lengthSync()}');
+    }
     print('pdf clicked');
   }
   @override
